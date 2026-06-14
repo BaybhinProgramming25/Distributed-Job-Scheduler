@@ -14,12 +14,8 @@ public class Main {
     public static void main(String[] args) {
 
         Javalin app = Javalin.create(config -> {
-            // Allow the static frontend (served from a different origin) to call this API
             config.bundledPlugins.enableCors(cors -> cors.addRule(rule -> rule.anyHost()));
         }).start(7000);
-
-        // List all jobs
-        app.get("/job", ctx -> ctx.json(jobs));
 
         // Create a new job
         app.post("/job", ctx -> {
@@ -45,7 +41,5 @@ public class Main {
 
         // Create the job for now, add the database logic later on 
         System.out.println("Received job: " + job);
-
-       
     }
 }

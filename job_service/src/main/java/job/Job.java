@@ -4,14 +4,10 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 public record Job(
-    String UserId, // Received from frontend
-    UUID Id, // Made when the job is made
-    String Name, // Received from frontend
-    String Type, // Received from frontend
-    String Status, // Set to "Scheduled" when job is created
-    boolean isRecurring, // Received from frontend
-    String Schedule, // Received from frontend
-    int retryCount,
+    UUID UserId, // Job that is associated with the user 
+    UUID JobId, // Job ID 
+    String Schedule, // CRON string
+    int retryCount, // Keep track of the retries 
     int maxRetries, // Should set a default amount
-    Timestamp createdAt // Made when the job is made
+    Timestamp createdAt // Time in UTC 
 ) {}

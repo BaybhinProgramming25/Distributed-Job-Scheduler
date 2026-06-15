@@ -4,10 +4,9 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 public record Job(
-    UUID UserId, // Job that is associated with the user 
-    UUID JobId, // Created with a random id 
-    String Schedule, // CRON string
-    int retryCount, // Keep track of the retries 
-    int maxRetries, // Should set a default amount
-    Timestamp createdAt // Time in UTC 
+    UUID JobId, 
+    String Schedule,
+    int retryCount,
+    int maxRetries,
+    Timestamp createdAt 
 ) {}

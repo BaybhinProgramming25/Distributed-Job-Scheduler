@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record Job(
     UUID UserId, // Job that is associated with the user 
-    UUID JobId, // Job ID 
+    UUID JobId, // Created with a random id 
     String Schedule, // CRON string
     int retryCount, // Keep track of the retries 
     int maxRetries, // Should set a default amount

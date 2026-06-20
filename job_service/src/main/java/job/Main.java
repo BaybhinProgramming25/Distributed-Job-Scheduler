@@ -3,6 +3,7 @@ package job;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -26,12 +27,14 @@ public class Main {
             config.routes.post("/job", ctx -> {
                 JobRequest request = ctx.bodyAsClass(JobRequest.class);
                 Job job = jobSubmission(request);
+                Timestamp nextTime = getNextRunTime(job.createdAt(), job.Schedule());
                 ctx.status(201).json(job);
             });
         }).start(7000);
 
     }
 
+    // Submits the job onto the database after getting a connection 
     public static Job jobSubmission(JobRequest request) {
 
         // Create the job 
@@ -53,34 +56,19 @@ public class Main {
             
             int rowsInserted = stmt.executeUpdate();
             if (rowsInserted < 1) {
-                System.out.Println("Couldn't add to database!");
+                System.out.println("Couldn't add to database!");
             }
         }
         catch (SQLException e) {
-            throw new runtimeException("Failed to insert job: ", e);
+            throw new RuntimeException("Failed to insert job: ", e);
         }
         
-        // Calculate the next time and insert it into the database 
-        Timestamp nextTime = getNextRunTime(job.createdAt());
-
-        // Insert the next job into the table 
-
         // Return the job
         return job;
     }
 
-    public static Timestamp getNextRunTime(Timestamp currentTime) {
-
-
-        // Add the cron-utils dependency later on 
-
-    
-        // Placeholder 
-        return Timestamp.from(Instant.now());
-
-    }
-
-    public static void insertNextScheduledJob(Job job, Timestmap nextRunTime) {
+    // After calculating the next run time, add the new job 
+    public static void insertNextScheduledJob(Job job, Timestamp nextRunTime) {
 
         NextJob nextJob = new NextJob(UUID.randomUUID(), nextRunTime, job.JobId()); 
 
@@ -96,8 +84,21 @@ public class Main {
 
             int rowsUpdated = stmt.executeUpdate();
             if (rowsUpdated < 1) {
-                System.out.Println("Failed to insert into Database");
+                System.out.println("Failed to insert into Database");
             }
         }
+        catch (SQLException e) {
+            throw new RuntimeException("Failed to insert next job: ", e);
+        }
+    }
+
+
+    public static Timestamp getNextRunTime(Timestamp currentTime, String cronString) {
+
+        
+
+        // Placeholder 
+        return Timestamp.from(Instant.now());
+
     }
 }

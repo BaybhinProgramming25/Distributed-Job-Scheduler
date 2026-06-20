@@ -1,7 +1,10 @@
 package job;
 
+import java.sql.Timestamp;
+import java.util.UUID;
+
 public record NextJob(
     UUID nextJobId,
-    TimeStamp nextRunTime,
+    Timestamp nextRunTime,
     UUID jobId
 ) {}

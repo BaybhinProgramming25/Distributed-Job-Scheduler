@@ -9,11 +9,10 @@ CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.jobs(
     nextRun TIMESTAMPTZ NOT NULL
 )
 
-
 CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.execution_history(
     id PRIMARY KEY DEFAULT gen_random_uuid(),
-    job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
-    execution_time INTEGER NOT NULL,
+    jobId UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+    executionTime INTEGER NOT NULL,
     isCompleted BOOLEAN NOT NULL,
-    last_update_time TIMESTAMPTZ NOT NULL
+    lastUpdatedTime TIMESTAMPTZ NOT NULL
 )

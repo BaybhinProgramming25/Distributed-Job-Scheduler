@@ -8,8 +8,22 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+
+import com.cronutils.model.Cron;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.time.ExecutionTime;
+import com.cronutils.parser.CronParser;
+
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+
+import static com.cronutils.model.CronType.UNIX;
 
 import database.Database; 
 
@@ -26,9 +40,18 @@ public class Main {
 
             config.routes.post("/job", ctx -> {
                 JobRequest request = ctx.bodyAsClass(JobRequest.class);
+            
                 Job job = jobSubmission(request);
                 Timestamp nextTime = getNextRunTime(job.createdAt(), job.Schedule());
-                ctx.status(201).json(job);
+                NextJob nextJob = insertNextScheduledJob(job, nextTime);
+                
+                if (next_job == null) {
+                    ctx.status(201).json(Map.of("job", job)); 
+                } 
+                ctx.status(201).json(Map.of(
+                    "job", job,
+                    "next_job", next_job
+                ));
             });
         }).start(7000);
 
@@ -95,10 +118,19 @@ public class Main {
 
     public static Timestamp getNextRunTime(Timestamp currentTime, String cronString) {
 
-        
+        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(UNIX));
 
-        // Placeholder 
-        return Timestamp.from(Instant.now());
+        Cron cron = parser.parse(cronString); 
+
+        ZonedDateTime nowUTC = currentTime.toInstant().atZone(ZoneOffset.UTC);
+
+        ZonedDateTime nextUTC = ExecutionTime.forCron(cron).nextExecution(nowUTC).orElse(null);
+
+        if (nextUTC == null) { 
+            return null;
+        }
+
+        return Timestamp.from(nextUTC.toInstant());
 
     }
 }

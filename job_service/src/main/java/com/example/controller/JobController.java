@@ -4,12 +4,25 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
-
-import java.security.Timestamp;
+import java.sql.Timestamp;
 import java.util.UUID;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import com.cronutils.parser.CronParser;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.CronType;
+import com.cronutils.model.Cron;
+import com.cronutils.model.time.ExecutionTime;
 
 import com.example.model.Job;
 import com.example.model.JobRequest;
+
+import com.example.database.Database;
 
 @RestController
 @RequestMapping("/job")
@@ -19,13 +32,13 @@ public class JobController {
     private static final int MAX_RETRIES_LIMIT = 10;
 
     @PostMapping
-    public ResponseEntity<Job> addJob(JobRequest request) {
+    public ResponseEntity<String> addJob(JobRequest request) {
 
         // Calculate the nexttime immediately
-        Timestamp nextUTC = getNextRunTime(Timestap.from(Instant.now()), request.Schedule());
+        Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), request.Schedule());
 
         if (nextUTC == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Could not calcuate next job time");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to add job.");
         }
 
         // Create job
@@ -54,14 +67,14 @@ public class JobController {
             throw new RuntimeException("Failed to insert job: ", e);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(job);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Successfully added job.");
     }
 
 
 
     public static Timestamp getNextRunTime(Timestamp currentTime, String cronString) {
 
-        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(UNIX));
+        CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
         Cron cron = parser.parse(cronString); 
 

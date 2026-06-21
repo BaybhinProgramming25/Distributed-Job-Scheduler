@@ -35,6 +35,12 @@ public class JobPolling {
                     System.out.println(job);
                 }
 
+                // Do some processing here afterwards...
+                
+
+                // Sleep for 5 minutes
+                Thread.sleep(5 * 60 * 1000);
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;

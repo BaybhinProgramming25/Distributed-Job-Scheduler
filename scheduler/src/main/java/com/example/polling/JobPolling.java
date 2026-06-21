@@ -2,17 +2,43 @@ package com.example.polling;
 
 import org.springframework.stereotype.Component;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.DataAccessException;
 
 @Component
 public class JobPolling {
 
-    @Scheduled
+    private final JdbcTemplate jdbcTemplate; 
+
+    public JobPolling(JdbcTemplate jdbctemplate) {
+        this.jdbcTemplate = jdbctemplate;
+    }
+
     public void pollJobs() {
         /*
-        1) Get the database connection
-        2) Get the Orchestrator 
-        3) Perform infinite while loop that pols every 5 minutes 
+        Left to do:
+        - Add jobs to the database from job_service
+        - Poll for jobs that are on the database
+        - Push ready jobs onto the RabbitMQ
+        */
         
-         */
+        while (true) {
+
+            // Poll the database 
+            try {
+                
+                List<Map<String, Object>> jobs = jdbcTemplate.queryForObject(
+                    "SELECT * FROM dist_jobs_scheduler.jobs WHERE nextRun <= now()"
+                );
+
+                for (Map<String, Object> job : jobs) {
+                    System.out.println(job);
+                }
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
     }
 }

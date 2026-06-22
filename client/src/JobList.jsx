@@ -29,7 +29,7 @@ const isRecurring = (job) => Boolean(job.isRecurring ?? job.recurring)
 
 const JobList = ({ jobs }) => {
   if (jobs.length === 0) {
-    return <p className="empty-state">No jobs yet — schedule one from the catalog above.</p>
+    return <p className="empty-state">No jobs yet — click "Send Quick Job" above.</p>
   }
 
   const sorted = [...jobs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))

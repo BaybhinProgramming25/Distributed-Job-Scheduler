@@ -60,14 +60,23 @@ export const JOB_TEMPLATES = [
     description: 'Flush stale entries from the cache layer.',
     isRecurring: false,
   },
+  {
+    type: 'QUICK_JOB',
+    name: 'Quick Job',
+    description: 'Generic recurring job for quickly testing random schedules.',
+    isRecurring: true,
+    defaultSchedule: '*/5 * * * *',
+  },
 ]
 
-// Friendly cron presets offered for recurring jobs
-export const CRON_PRESETS = [
-  { label: 'Every 5 minutes', value: '*/5 * * * *' },
-  { label: 'Every hour', value: '0 * * * *' },
-  { label: 'Daily at 2:00 AM', value: '0 2 * * *' },
-  { label: 'Weekly (Sun midnight)', value: '0 0 * * 0' },
-  { label: 'Weekly (Mon 9:00 AM)', value: '0 9 * * 1' },
-  { label: 'Custom…', value: 'custom' },
-]
+// Hard cap: random schedules generated for the "Randomize" button never
+// exceed a 30 minute interval, and never go coarser than minutes (no
+// hourly/monthly/yearly schedules).
+const MAX_RANDOM_INTERVAL_MINUTES = 30
+
+// Generates a cron string of the form "*/N * * * *", where N is a random
+// integer between 1 and MAX_RANDOM_INTERVAL_MINUTES (inclusive).
+export const generateRandomMinuteCron = () => {
+  const minutes = Math.floor(Math.random() * MAX_RANDOM_INTERVAL_MINUTES) + 1
+  return `*/${minutes} * * * *`
+}

@@ -38,9 +38,10 @@ public class JobController {
     }
 
     @PostMapping
-    public ResponseEntity<String> addJob(JobRequest request) {
+    public ResponseEntity<String> addJob(@RequestBody JobRequest request) {
 
-        Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), request.Schedule());
+        Timestamp currentTime = Timestamp.from(Instant.now());
+        Timestamp nextUTC = getNextRunTime(currentTime, request.Schedule());
 
         if (nextUTC == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to add job.");
@@ -48,11 +49,12 @@ public class JobController {
 
         try {
             jdbcTemplate.update(
-            "INSERT INTO jobs (id, schedule, retriesCount, maxRetries, nextRun) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO jobs (id, schedule, retriesCount, maxRetries, createdAt, nextRun) VALUES (?, ?, ?, ?, ?, ?)",
             UUID.randomUUID(),
             request.Schedule(),
             STARTING_MAX_RETRIES,
             MAX_RETRIES_LIMIT,
+            currentTime,
             nextUTC
         ); 
         } catch (DataAccessException e) {

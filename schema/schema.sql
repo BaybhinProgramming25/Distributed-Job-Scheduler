@@ -7,12 +7,12 @@ CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.jobs(
     maxRetries INTEGER NOT NULL DEFAULT 10,
     createdAt TIMESTAMPTZ NOT NULL,
     nextRun TIMESTAMPTZ NOT NULL
-)
+);
 
 CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.execution_history(
-    id PRIMARY KEY DEFAULT gen_random_uuid(),
-    jobId UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    jobId UUID NOT NULL REFERENCES dist_jobs_scheduler.jobs(id) ON DELETE CASCADE,
     executionTime INTEGER NOT NULL,
     isCompleted BOOLEAN NOT NULL,
     lastUpdatedTime TIMESTAMPTZ NOT NULL
-)
+);

@@ -28,9 +28,7 @@ import com.example.model.JobRequest;
 @RequestMapping("/job")
 public class JobController {
 
-    private static final int STARTING_MAX_RETRIES = 0;
     private static final int MAX_RETRIES_LIMIT = 10;
-
     private final JdbcTemplate jdbcTemplate;
 
     public JobController(JdbcTemplate jdbctemplate) {
@@ -40,21 +38,18 @@ public class JobController {
     @PostMapping
     public ResponseEntity<String> addJob(@RequestBody JobRequest request) {
 
-        Timestamp currentTime = Timestamp.from(Instant.now());
-        Timestamp nextUTC = getNextRunTime(currentTime, request.Schedule());
+        Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), request.Schedule());
 
         if (nextUTC == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to add job.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to calculate next run time...");
         }
 
         try {
             jdbcTemplate.update(
-            "INSERT INTO jobs (id, schedule, retriesCount, maxRetries, createdAt, nextRun) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO jobs (id, schedule, maxRetries, nextRun) VALUES (?, ?, ?, ?)",
             UUID.randomUUID(),
             request.Schedule(),
-            STARTING_MAX_RETRIES,
             MAX_RETRIES_LIMIT,
-            currentTime,
             nextUTC
         ); 
         } catch (DataAccessException e) {

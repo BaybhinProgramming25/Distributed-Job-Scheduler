@@ -21,7 +21,6 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.Cron;
 import com.cronutils.model.time.ExecutionTime;
 
-import com.example.model.Job;
 import com.example.model.JobRequest;
 
 @RestController

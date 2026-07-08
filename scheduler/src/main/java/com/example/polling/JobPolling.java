@@ -88,28 +88,34 @@ public class JobPolling implements CommandLineRunner {
                             try {
 
                                 int rowsChanged = jdbcTemplate.update(
-                                    "UPDATE history SET jobStatus = ? WHERE id = ?", "failed", job.HistoryId()
+                                    "UPDATE history SET jobStatus = ? WHERE id = ?", "failed", job.histoyId()
                                 );
 
                                 if (rowsChanged == 0) {
-                                    log.warn("Tried to mark history {} as failed, but no row was updated", job.HistoryId());
+                                    log.warn("Tried to mark history {} as failed, but no row was updated", job.histoyId());
                                 }
 
                             } catch (DataAccessException e) {
-                                log.error("Database error while handling job {}", job.JobId(), e);
+                                log.error("Database error while handling job {}", job.jobId(), e);
                             }
                         }
                         else {
     
-                            Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), job.Schedule());
+                            Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), job.schedule());
+
+                            if (nextUTC == null) {
+                                log.warn("No next run time for job {} - skipping", job.jobId());
+                                continue; 
+                            }
                             
                             try {
                                 jdbcTemplate.update(
-                                    "UPDATE jobs SET nextRun = ? WHERE id = ?", nextUTC, job.JobId()
+                                    "UPDATE jobs SET nextRun = ? WHERE id = ?", nextUTC, job.jobId()
                                 );
 
                             } catch (DataAccessException e) {
-                                log.error("Database error while handling job {}", job.JobId(), e);
+                                log.error("Database error while handling job {}", job.jobId(), e);
+                                continue;
                             }
 
                             rabbitTemplate.convertAndSend("job.queue", job);

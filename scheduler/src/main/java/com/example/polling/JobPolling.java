@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.jdbc.core.RowMapper; 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cronutils.parser.CronParser;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.CronType;
@@ -33,6 +36,8 @@ public class JobPolling implements CommandLineRunner {
 
     private final JdbcTemplate jdbcTemplate; 
     private final RabbitTemplate rabbitTemplate;
+
+    private static final Logger log = LoggerFactory.getLogger(JobPolling.class);
 
     private final RowMapper<JobHistory> jobRowMapper = (rs, rowNum) -> new JobHistory(
         UUID.fromString(rs.getString("jobId")),
@@ -69,53 +74,51 @@ public class JobPolling implements CommandLineRunner {
         while (true) {
 
             try {
+
+                try {
                 
-                List<JobHistory> jobs = jdbcTemplate.query(
-                    "SELECT jobs.id AS jobId, jobs.schedule AS schedule, jobs.maxRetries AS maxRetries, jobs.nextRun AS nextRun, history.id AS historyId, history.retriesCount AS retriesCount FROM jobs JOIN history ON jobs.id = history.jobId WHERE nextRun <= now()", jobRowMapper
-                );
-                
-                for(JobHistory job : jobs) {
+                    List<JobHistory> jobs = jdbcTemplate.query(
+                        "SELECT jobs.id AS jobId, jobs.schedule AS schedule, jobs.maxRetries AS maxRetries, jobs.nextRun AS nextRun, history.id AS historyId, history.retriesCount AS retriesCount FROM jobs JOIN history ON jobs.id = history.jobId WHERE nextRun <= now()", jobRowMapper
+                    );
+                    
+                    for(JobHistory job : jobs) {
 
-                    if (job.retriesCount() >= job.maxRetries()) {
+                        if (job.retriesCount() >= job.maxRetries()) {
 
-                        try {
+                            try {
 
-                            int rowsChanged = jdbcTemplate.update(
-                                "UPDATE history SET jobStatus = ? WHERE id = ?", "failed", job.HistoryId()
-                            );
+                                int rowsChanged = jdbcTemplate.update(
+                                    "UPDATE history SET jobStatus = ? WHERE id = ?", "failed", job.HistoryId()
+                                );
 
-                            if (rowsChanged == 0) {
-                                // Log that something didnt change in the database (not necessarily an error)
-                                // Add the logging and error stuff afterwards
+                                if (rowsChanged == 0) {
+                                    log.warn("Tried to mark history {} as failed, but no row was updated", job.HistoryId());
+                                }
 
+                            } catch (DataAccessException e) {
+                                log.error("Database error while handling job {}", job.JobId(), e);
+                            }
+                        }
+                        else {
+    
+                            Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), job.Schedule());
+                            
+                            try {
+                                jdbcTemplate.update(
+                                    "UPDATE jobs SET nextRun = ? WHERE id = ?", nextUTC, job.JobId()
+                                );
+
+                            } catch (DataAccessException e) {
+                                log.error("Database error while handling job {}", job.JobId(), e);
                             }
 
-                        } catch (DataAccessException e) {
-
-                            // Do something here 
+                            rabbitTemplate.convertAndSend("job.queue", job);
                         }
                     }
-                    else {
-                        
-                        // Add the job into the queue
-                        rabbitTemplate.convertAndSend("job.queue", job);
-
-                        // Calculate the next run 
-                        Timestamp nextUTC = getNextRunTime(Timestamp.from(Instant.now()), job.Schedule());
-
-                        try {
-                            jdbcTemplate.update(
-                                "UPDATE jobs SET nextRun = ? WHERE id = ?", nextUTC, job.JobId()
-                            );
-
-                        } catch (DataAccessException e) {
-                            
-                            // Do something else here instead of returning
-                        }
-                    }
+                } catch (DataAccessException e) {
+                    log.error("Database hiccup - trying again next polling cycle", e);
                 }
 
-                // 30-second sleep 
                 Thread.sleep(30000);
 
             } catch (InterruptedException e) {

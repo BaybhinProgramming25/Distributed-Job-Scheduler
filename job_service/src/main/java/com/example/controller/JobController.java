@@ -28,6 +28,9 @@ import com.example.model.JobRequest;
 public class JobController {
 
     private static final int MAX_RETRIES_LIMIT = 10;
+    private static final int STARTING_RETRIES_COUNT = 0;
+    private static final String INITIAL_JOB_STATUS = "pending";
+
     private final JdbcTemplate jdbcTemplate;
 
     public JobController(JdbcTemplate jdbctemplate) {
@@ -43,14 +46,16 @@ public class JobController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to calculate next run time...");
         }
 
+        UUID jobId = UUID.randomUUID();
+
         try {
             jdbcTemplate.update(
-            "INSERT INTO jobs (id, schedule, maxRetries, nextRun) VALUES (?, ?, ?, ?)",
-            UUID.randomUUID(),
-            request.Schedule(),
-            MAX_RETRIES_LIMIT,
-            nextUTC
-        ); 
+                "INSERT INTO jobs (id, schedule, maxRetries, nextRun) VALUES (?, ?, ?, ?)",
+                jobId,
+                request.Schedule(),
+                MAX_RETRIES_LIMIT,
+                nextUTC
+            ); 
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add job");
         }

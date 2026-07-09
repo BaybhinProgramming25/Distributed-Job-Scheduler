@@ -39,6 +39,8 @@ public class JobPolling implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(JobPolling.class);
 
+    private final String DEAD_JOB = "dead";
+
     private final RowMapper<JobDTO> jobRowMapper = (rs, rowNum) -> new JobDTO(
         UUID.fromString(rs.getString("id")),
         rs.getString("schedule"),
@@ -81,11 +83,15 @@ public class JobPolling implements CommandLineRunner {
                     for(JobDTO job : jobs) {
 
                         if (job.retriesCount() >= job.maxRetries()) {
-                            
-                            jdbcTemplate.update(
-                                "UPDATE jobs SET jobActive = ? WHERE id = ?", "dead", job.id()
-                            );
-                            
+
+                            try {
+                                // Job will no longer be processed again and put back into the queue. It remains dead forever
+                                jdbcTemplate.update(
+                                    "UPDATE jobs SET jobActive = ? WHERE id = ?", DEAD_JOB, job.id()
+                                );
+                            } catch (DataAccessException dbError) {
+                                log.error("Database error while handling job {}", job.id(), dbError);
+                            }
                         }
                         else {
     
@@ -100,7 +106,6 @@ public class JobPolling implements CommandLineRunner {
                                 jdbcTemplate.update(
                                     "UPDATE jobs SET nextRun = ? WHERE id = ?", nextUTC, job.id()
                                 );
-
                             } catch (DataAccessException e) {
                                 log.error("Database error while handling job {}", job.id(), e);
                                 continue;

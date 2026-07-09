@@ -54,11 +54,15 @@ public class JobProcessing {
 
     @RabbitListener(queues = "job.queue")
     public void processJob(JobDTO job) {
-
-        // Need to now add idempotency as well as manual ACKs
-        // This ensures no duplicate and jobs are only run at most once 
         
         log.info("Starting job {}", job.id());
+
+        Timestamp executionTime = job.nextRun();
+
+        if (!jobHistoryService.claimExecution(job.id(), executionTime)) {
+            log.info("Job {} for execution time {} has already been processed, skipping job...", job.id(), executionTime);
+            return;
+        }
 
         UUID historyId = UUID.randomUUID();
         Timestamp startedTime = Timestamp.from(Instant.now());

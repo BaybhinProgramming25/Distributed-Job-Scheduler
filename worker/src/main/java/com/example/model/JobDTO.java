@@ -8,5 +8,6 @@ public record JobDTO(
     String schedule,
     int retriesCount,
     int maxRetries,
-    Timestamp nextRun
+    Timestamp nextRun,
+    String jobActive
 ) {}

@@ -45,7 +45,6 @@ public class JobProcessing {
 
     private static final String SUCCESS_JOB = "success";
     private static final String FAILED_JOB = "failed";
-
     private static final int RETRIES_RESET = 0;
 
     public JobProcessing(JobHistoryService jobhistoryservice) {

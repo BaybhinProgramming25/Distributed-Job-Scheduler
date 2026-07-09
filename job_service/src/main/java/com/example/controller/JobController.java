@@ -15,6 +15,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cronutils.parser.CronParser;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.CronType;
@@ -29,9 +32,10 @@ public class JobController {
 
     private static final int MAX_RETRIES_LIMIT = 10;
     private static final int STARTING_RETRIES_COUNT = 0;
-    private static final String INITIAL_JOB_STATUS = "pending";
+    private static final String INITIAL_JOB_STATUS = "active";
 
     private final JdbcTemplate jdbcTemplate;
+    private static final Logger log = LoggerFactory.getLogger(JobController.class);
 
     public JobController(JdbcTemplate jdbctemplate) {
         this.jdbcTemplate = jdbctemplate; 
@@ -47,16 +51,23 @@ public class JobController {
         }
 
         UUID jobId = UUID.randomUUID();
+        String schedule = request.Schedule();
 
         try {
             jdbcTemplate.update(
-                "INSERT INTO jobs (id, schedule, maxRetries, nextRun) VALUES (?, ?, ?, ?)",
+                "INSERT INTO dist_jobs_scheduler.jobs (id, schedule, retriesCount, maxRetries, nextRun, jobActive) VALUES (?, ?, ?, ?, ?, ?)",
                 jobId,
-                request.Schedule(),
+                schedule,
+                STARTING_RETRIES_COUNT,
                 MAX_RETRIES_LIMIT,
-                nextUTC
+                nextUTC,
+                INITIAL_JOB_STATUS
             ); 
+
+            log.info("Added job {} to database with schedule {}", jobId, schedule);
+
         } catch (DataAccessException e) {
+            log.error("Error in adding job {}", jobId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add job");
         }
         

@@ -46,7 +46,8 @@ public class JobPolling implements CommandLineRunner {
         rs.getString("schedule"),
         rs.getInt("retriesCount"),
         rs.getInt("maxRetries"),
-        rs.getTimestamp("nextRun")
+        rs.getTimestamp("nextRun"),
+        rs.getString("jobActive")
     );
 
     public JobPolling(JdbcTemplate jdbctemplate, RabbitTemplate rabbittemplate) {
@@ -74,11 +75,13 @@ public class JobPolling implements CommandLineRunner {
 
         while (true) {
 
+            log.info("Polling...\n");
+
             try {
 
                 try {
                 
-                    List<JobDTO> jobs = jdbcTemplate.query("SELECT * FROM jobs WHERE nextRun <= now() AND jobActive = 'active'", jobRowMapper);
+                    List<JobDTO> jobs = jdbcTemplate.query("SELECT * FROM dist_jobs_scheduler.jobs WHERE nextRun <= now() AND jobActive = 'active'", jobRowMapper);
                     
                     for(JobDTO job : jobs) {
 
@@ -87,7 +90,7 @@ public class JobPolling implements CommandLineRunner {
                             try {
                                 // Job will no longer be processed again and put back into the queue. It remains dead forever
                                 jdbcTemplate.update(
-                                    "UPDATE jobs SET jobActive = ? WHERE id = ?", DEAD_JOB, job.id()
+                                    "UPDATE dist_jobs_scheduler.jobs SET jobActive = ? WHERE id = ?", DEAD_JOB, job.id()
                                 );
                             } catch (DataAccessException dbError) {
                                 log.error("Database error while handling job {}", job.id(), dbError);
@@ -104,7 +107,7 @@ public class JobPolling implements CommandLineRunner {
                             
                             try {
                                 jdbcTemplate.update(
-                                    "UPDATE jobs SET nextRun = ? WHERE id = ?", nextUTC, job.id()
+                                    "UPDATE dist_jobs_scheduler.jobs SET nextRun = ? WHERE id = ?", nextUTC, job.id()
                                 );
                             } catch (DataAccessException e) {
                                 log.error("Database error while handling job {}", job.id(), e);

@@ -26,7 +26,7 @@ public class JobHistoryService {
     public void recordFailure(UUID historyId, UUID jobId, String failedJob, Timestamp startedTime) {
 
         jdbcTemplate.update(
-            "INSERT INTO history (id, jobId, jobStatus, jobStarted) VALUES (?, ?, ?, ?)",
+            "INSERT INTO dist_jobs_scheduler.history (id, jobId, jobStatus, jobStarted) VALUES (?, ?, ?, ?)",
             historyId,
             jobId,
             failedJob,
@@ -35,7 +35,7 @@ public class JobHistoryService {
 
         // Also need to increment the counter 
         jdbcTemplate.update(
-            "UPDATE jobs SET retriesCount = retriesCount + 1 WHERE id = ?", jobId
+            "UPDATE dist_jobs_scheduler.jobs SET retriesCount = retriesCount + 1 WHERE id = ?", jobId
         );
     }
 
@@ -43,7 +43,7 @@ public class JobHistoryService {
     public void recordSuccess(UUID historyId, UUID jobId, String successJob, int retriesReset, Timestamp startedTime, Timestamp finishedTime) {
 
         jdbcTemplate.update(
-            "INSERT INTO history (id, jobId, jobStatus, jobStarted, jobFinished) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO dist_jobs_scheduler.history (id, jobId, jobStatus, jobStarted, jobFinished) VALUES (?, ?, ?, ?, ?)",
             historyId,
             jobId,
             successJob,
@@ -52,7 +52,7 @@ public class JobHistoryService {
         );
 
         jdbcTemplate.update(
-            "UPDATE jobs SET retriesCount = ? WHERE id = ?", retriesReset, jobId
+            "UPDATE dist_jobs_scheduler.jobs SET retriesCount = ? WHERE id = ?", retriesReset, jobId
         );
 
     }
@@ -65,7 +65,7 @@ public class JobHistoryService {
         try {
 
             jdbcTemplate.update(
-                "INSERT INTO processedJobs (idempotency_key) VALUES (?)", idem_key
+                "INSERT INTO dist_jobs_scheduler.processedJobs (idempotency_key) VALUES (?)", idem_key
             );
 
             return true; // The key isn't taken, return true

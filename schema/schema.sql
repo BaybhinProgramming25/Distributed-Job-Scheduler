@@ -16,3 +16,7 @@ CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.history (
     jobStarted TIMESTAMPTZ NOT NULL,
     jobFinished TIMESTAMPTZ NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.processedJobs (
+    idempotency_key STRING PRIMARY KEY
+);

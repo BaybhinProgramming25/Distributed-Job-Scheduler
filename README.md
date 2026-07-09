@@ -1,1 +1,1 @@
-# Distributed-Job-Scheduler
+# Distributed Job Scheduler

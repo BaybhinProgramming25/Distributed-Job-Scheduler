@@ -10,7 +10,10 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/job': "http://localhost:7000",
+      '/job': {
+        target: 'http://localhost:7000',
+        changeOrigin: true
+      }
     }
   }
 })

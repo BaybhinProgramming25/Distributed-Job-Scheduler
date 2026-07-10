@@ -7,7 +7,7 @@ services:
       - "26257:26257"
       - "8081:8080"
     volumes:
-      - ./cockroach-data:/cockroach/cockroach-data
+      - cockroach-data:/cockroach/cockroach-data
     
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -21,6 +21,44 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+  
 
+  job-service:
+    build: ./job_service
+    environment:
+      DB_HOST: cockroachdb
+      RABBITMQ_HOST: rabbitmq
+    ports:
+      - "7000:7000"
+    depends_on:
+      cockroachdb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+  
+  scheduler:
+    build: ./scheduler
+    environment:
+      DB_HOST: cockroachdb
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      cockroachdb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+  
+  worker:
+    build: ./worker
+    environment:
+      DB_HOST: cockroachdb
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      cockroachdb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      replicas: 5
+    
 volumes:
   cockroach-data:

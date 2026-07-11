@@ -1,0 +1,10 @@
+[5-workers] Creating 15 jobs at concurrency 15...
+[5-workers] Ingestion done in 0.22s (0 failures)
+[5-workers] Ingestion latency: n=15 min=0.13s p50=0.15s p95=0.17s p99=0.17s max=0.17s
+[5-workers] Ingestion throughput: 68.18 jobs/s
+[5-workers] Tracking 15 jobs through completion (timeout 900s)...
+[5-workers] All tracked jobs settled in 175.89s
+[5-workers] End-to-end completion latency (create -> finish): n=15 min=102.81s p50=134.97s p95=174.67s p99=174.67s max=174.67s
+[5-workers] Completion throughput: 5.12 jobs/min
+[5-workers] Jobs with at least one retry: 0/15 (total retries: 0)
+[5-workers] Peak queue backlog (messages_ready): 0

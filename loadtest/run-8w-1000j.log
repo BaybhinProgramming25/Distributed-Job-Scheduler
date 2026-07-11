@@ -1,0 +1,10 @@
+[8-workers-1000jobs] Creating 1000 jobs at concurrency 25...
+[8-workers-1000jobs] Ingestion done in 6.36s (0 failures)
+[8-workers-1000jobs] Ingestion latency: n=1000 min=0.03s p50=0.13s p95=0.33s p99=0.44s max=0.65s
+[8-workers-1000jobs] Ingestion throughput: 157.33 jobs/s
+[8-workers-1000jobs] Tracking 1000 jobs through completion (timeout 6000s)...
+[8-workers-1000jobs] All tracked jobs settled in 4335.93s
+[8-workers-1000jobs] End-to-end completion latency (create -> finish): n=1000 min=99.20s p50=1434.64s p95=4105.35s p99=4237.41s max=4333.52s
+[8-workers-1000jobs] Completion throughput: 13.84 jobs/min
+[8-workers-1000jobs] Jobs with at least one retry: 0/1000 (total retries: 0)
+[8-workers-1000jobs] Peak queue backlog (messages_ready): 70
